@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.sql.DataSource;
 
 public class DAO {
@@ -38,5 +40,42 @@ public class DAO {
 		// dernière ligne : on renvoie le résultat
 		return result;
 	}
+        public void insertProduct(Product produit) throws DAOException,Exception{
+            String sql = "INSERT INTO PRODUCT VALUES (?,?,?)";
+                if(produit.id<0){
+                    throw new IllegalArgumentException("Product must be positive");
+                }
+		try (Connection connection = myDataSource.getConnection();
+			PreparedStatement stmt = connection.prepareStatement(sql)) {
+			// Définir la valeur des paramètres
+			stmt.setInt(1, produit.id);
+                        stmt.setString(2, produit.name);
+                        stmt.setFloat(3,produit.price);
+
+			stmt.executeUpdate();
+
+		} catch (SQLException ex) {
+			Logger.getLogger("DAO").log(Level.SEVERE, null, ex);
+			throw new DAOException(ex.getMessage());
+		}
 	
+        }
+        public Product getProduct(int productId) throws DAOException{
+            Product result;
+            
+            String sql = "SELECT * PRODUCT WHERE ID = ?";
+                try (Connection connection = myDataSource.getConnection();
+                        PreparedStatement stmt = connection.prepareStatement(sql)){
+                    stmt.setInt(1, productId);
+                    ResultSet rs = stmt.executeQuery();
+                    rs.next();
+                    result = new Product(rs.getInt("ID"),rs.getString("Name"),rs.getFloat("Price"));
+                    
+                    
+                } catch (SQLException ex) {
+			Logger.getLogger("DAO").log(Level.SEVERE, null, ex);
+			throw new DAOException(ex.getMessage());
+		}
+		return result;    
+        }
 }
